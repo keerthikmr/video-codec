@@ -20,10 +20,15 @@ _Dimension has to be the same as the original source_
 
 ## Project notes
 
+**With rgb24 format**  
+
+Reading from an rgb24 format and derving yuv from rgb using numerical formula takes **~290ms**
+
+
 **Time optimizations:**  
 
-Fetching the RGB values of each pixel in the 8 second 384x216 video takes ~35 seconds
+Fetching the RGB values of each pixel in the 8 second 384x216 video takes **~35s**
 
-Converting rgb to yuv using numerical formula takes upto ~570 seconds
+Converting rgb to yuv using numerical formula takes upto **~570s**
 
-Using the `yuv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)` method takes only 40 seconds
+Using the `yuv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)` method takes only **~40s**
