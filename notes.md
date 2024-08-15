@@ -1,4 +1,4 @@
-### Developmental notes
+# Developmental notes
 
 ## FFmpeg commands
 
@@ -20,12 +20,14 @@ _Dimension has to be the same as the original source_
 
 ## Project notes
 
-**With rgb24 format**  
+#### With rgb24 format
 
 Reading from an rgb24 format and derving yuv from rgb using numerical formula takes **~290ms**
 
+Converting the 8 second 384x216 video to rgb format takes **~0.7ms**  
 
-**Time optimizations:**  
+
+#### Time optimizations:
 
 Fetching the RGB values of each pixel in the 8 second 384x216 video takes **~35s**
 
