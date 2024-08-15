@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import time
 
 video_path = 'video.rgb24'
 
@@ -8,9 +7,8 @@ video_capture = cv2.VideoCapture(video_path)
 
 ret, frame = video_capture.read()
 
+# height, width, _ = frame.shape
 height, width = 216, 384
-
-frames = []
 
 # Stores YUV values of the entire video using opencv method
 def get_yuv_cv():
@@ -38,6 +36,7 @@ def get_yuv_cv():
 
     video_capture.release()
 
+frames = []
 
 def get_byte_frames():
 
@@ -54,3 +53,22 @@ def get_byte_frames():
 
 get_byte_frames()
 
+
+# Read RGB values directly from bytes and convert to YUV
+def get_yuv():
+    
+    Y, U, V = [], [], []
+
+    for frame in frames:
+        for j in range(width*height):
+            r, g, b = frame[3*j], frame[3*j+1], frame[3*j+2]
+            
+            y = +0.299*r + 0.587*g + 0.114*b
+            u = -0.169*r - 0.331*g + 0.449*b + 128
+            v = 0.499*r - 0.418*g - 0.0813*b + 128
+
+            Y.append(y)
+            U.append(u)
+            V.append(v)
+
+get_yuv()
