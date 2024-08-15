@@ -2,18 +2,18 @@ import cv2
 import numpy as np
 import time
 
-video_path = 'output.mp4'
+video_path = 'video.rgb24'
 
 video_capture = cv2.VideoCapture(video_path)
 
 ret, frame = video_capture.read()
 
-# Stores YUV values of the entire video
-def get_yuv():
-    
-    ret, frame = video_capture.read()
-    
-    height, width, _ = frame.shape
+height, width = 216, 384
+
+frames = []
+
+# Stores YUV values of the entire video using opencv method
+def get_yuv_cv():
 
     while True:
         ret, frame = video_capture.read()
@@ -39,10 +39,18 @@ def get_yuv():
     video_capture.release()
 
 
-start_time = time.time()
+def get_byte_frames():
 
-get_yuv()
+    buffer_size = width*height*3
 
-end_time = time.time()
+    with open(video_path, 'rb') as file:
+        while True:
+            frame = file.read(buffer_size)
+            
+            if not frame:
+                break
+                
+            frames.append(frame)
 
-print(end_time-start_time)
+get_byte_frames()
+
