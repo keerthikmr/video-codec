@@ -2,15 +2,13 @@ import cv2
 
 video_path = 'video.rgb24'
 
-video_capture = cv2.VideoCapture(video_path)
-
-ret, frame = video_capture.read()
-
-# height, width, _ = frame.shape
 height, width = 216, 384
 
-# Stores YUV values of the entire video using opencv method
+# Stores YUV values of the entire video using opencv method - takes more time (~40s for sample video)
 def get_yuv_cv():
+    video_capture = cv2.VideoCapture(video_path)
+
+    ret, frame = video_capture.read()
     
     while True:
         ret, frame = video_capture.read()
@@ -36,6 +34,7 @@ def get_yuv_cv():
     video_capture.release()
 
 
+# Read bytes of frames from the video
 def get_byte_frames():
     frames = []
 
@@ -52,7 +51,8 @@ def get_byte_frames():
 
     return frames
 
-# Read RGB values directly from bytes and convert to YUV
+
+# Read RGB values from bytes and convert them to YUV
 def get_yuv(frame):
     Y, U, V = [], [], []
     for j in range(width*height):
@@ -69,6 +69,7 @@ def get_yuv(frame):
     return Y, U, V
 
 
+# Average the U and V values of 2x2 pixels to downsample
 def down_sample(U, V):
 
     down_sampled_V = [0] * (width // 2 * height // 2)
@@ -88,8 +89,7 @@ def down_sample(U, V):
     return down_sampled_U, down_sampled_V
 
 
-def main():
-    frames = get_byte_frames()
+def prepare_yuv_frames(frames):
 
     for i in range(len(frames)):
         Y, U, V = get_yuv(frames[i])
@@ -99,7 +99,11 @@ def main():
         yuv_frame = Y + down_sampled_U + down_sampled_V
 
         frames[i] = bytearray(yuv_frame)
-    
+        
+    return frames
+
+
+def yuv_encode(frames):
     data = b"".join(frames)
 
     try:
@@ -107,6 +111,14 @@ def main():
             f.write(data)
     except IOError as e:
         print(f"Error writing file: {e}")
+
+
+def main():
+    frames = get_byte_frames()
+
+    frames = prepare_yuv_frames(frames)
+
+    yuv_encode(frames)
 
 
 if __name__ == '__main__':
