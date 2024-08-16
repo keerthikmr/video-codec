@@ -1,10 +1,12 @@
 import cv2
+import ffmpeg
 
-video_path = 'video.rgb24'
+video_path = 'output.mp4'
 
 height, width = 216, 384
 
 # Stores YUV values of the entire video using opencv method - takes more time (~40s for sample video)
+# Not the default method
 def get_yuv_cv():
     video_capture = cv2.VideoCapture(video_path)
 
@@ -32,6 +34,12 @@ def get_yuv_cv():
                 V.append(v)
 
     video_capture.release()
+
+
+# Convert the video to RGB format using ffmpeg
+def convert_to_rgb():
+    # ffmpeg.input(video_path, format='rawvideo', pix_fmt='rgb24', s='216x384').output('output.rgb').run()
+    ffmpeg.input("input.mp4").output('video.rgb24', format='rawvideo', pix_fmt='rgb24').run()
 
 
 # Read bytes of frames from the video
@@ -114,6 +122,8 @@ def yuv_encode(frames):
 
 
 def main():
+    convert_to_rgb()
+    
     frames = get_byte_frames()
 
     frames = prepare_yuv_frames(frames)
