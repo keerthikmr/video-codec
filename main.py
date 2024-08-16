@@ -1,5 +1,6 @@
 import cv2
 import ffmpeg
+import zlib
 
 input_video_path = 'input.mp4'
 
@@ -156,14 +157,25 @@ def run_length_encoding(frames):
     return rle_encoded
 
 
-def save_rle_encode(rle_encoded):
-    data = b"".join(rle_encoded)
+def save_rle_encode(byte_rle_encoded):
 
     try:
         with open('rle_encoded.rle', 'wb') as f:
-            f.write(data)
+            f.write(byte_rle_encoded)
+
     except IOError as e:
         print(f"Error writing file: {e}")
+
+
+def save_zlib_encode(byte_rle_encoded):
+    
+    try:
+        with open('zlib_encoded.bin', 'wb') as f:
+            f.write(zlib.compress(byte_rle_encoded, level=9))
+
+    except IOError as e:
+        print(f"Error writing file: {e}")
+
 
 def main():
     convert_to_rgb()
@@ -176,7 +188,12 @@ def main():
 
     rle_encoded = run_length_encoding(frames)
 
-    save_rle_encode(rle_encoded)
+    byte_rle_encoded = b"".join(rle_encoded)
 
+    save_rle_encode(byte_rle_encoded)
+    
+    save_zlib_encode(byte_rle_encoded)
+
+    
 if __name__ == '__main__':
     main()
