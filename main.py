@@ -177,7 +177,7 @@ def save_zlib_compressed(byte_rle_encoded):
         print(f"Error writing file: {e}")
 
 
-def main():
+def encode():
     convert_to_rgb()
 
     frames = get_byte_frames()
@@ -193,6 +193,47 @@ def main():
     save_rle_encode(byte_rle_encoded)
     
     save_zlib_compressed(byte_rle_encoded)
+
+
+# Read the encoded file and decompress it
+def decompress():
+    try:
+        with open('zlib_encoded.bin', 'rb') as f:
+            decompressed = zlib.decompress(f.read())
+
+    except IOError as e:
+        print(f"Error reading file: {e}")
+
+    return decompressed
+
+    
+# Revert all encoding steps in reverse order
+def decode():
+
+    decompressed = decompress()
+    
+    frames = []
+    
+    # In the YUV downsampling step, each 2x2 pixel was substiuited with one value.
+    # So the size would be half of the total RGB size
+    buffer_size = (width*height*3)//2
+
+    i = 0
+
+    while buffer_size * (i + 1) < len(decompressed):
+        frame = decompressed[buffer_size * i : buffer_size * (i + 1)]
+
+        frames.append(frame)
+
+        i += 1
+
+    return frames
+
+
+def main():
+    encode()
+
+    decode()
 
 
 if __name__ == '__main__':
