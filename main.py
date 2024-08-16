@@ -167,7 +167,7 @@ def save_rle_encode(byte_rle_encoded):
         print(f"Error writing file: {e}")
 
 
-def save_zlib_encode(byte_rle_encoded):
+def save_zlib_compressed(byte_rle_encoded):
     
     try:
         with open('zlib_encoded.bin', 'wb') as f:
@@ -192,8 +192,8 @@ def main():
 
     save_rle_encode(byte_rle_encoded)
     
-    save_zlib_encode(byte_rle_encoded)
+    save_zlib_compressed(byte_rle_encoded)
 
-    
+
 if __name__ == '__main__':
     main()
