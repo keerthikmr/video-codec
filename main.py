@@ -111,7 +111,7 @@ def prepare_yuv_frames(frames):
     return frames
 
 
-def yuv_encode(frames):
+def save_yuv_encode(frames):
     data = b"".join(frames)
 
     try:
@@ -121,6 +121,50 @@ def yuv_encode(frames):
         print(f"Error writing file: {e}")
 
 
+def run_length_encoding(frames):
+    rle_encoded = []
+
+    for i in range(len(frames)):
+        if i == 0:
+            rle_encoded.append(frames[0])
+            continue
+        
+        delta = []
+
+        # Modulo 256 to handle overflow (wrap around for negative numbers)
+        for j in range (len(frames[i])):
+            delta.append((frames[i][j] - frames[i-1][j]) % 256)
+
+        j = 0
+        run_length_encoding = []
+        
+        while j < len(frames[i]):
+
+            count = 0
+            # Count the number of consecutive same values
+            # Count should be less than 255 to fit in a byte
+            while count < 255 and (j + count) < len(delta) and delta[j + count] == delta[j]:
+                count += 1
+
+            run_length_encoding.append(count)
+            run_length_encoding.append(delta[j])
+
+            j += count
+
+        rle_encoded.append(bytearray(run_length_encoding))
+
+    return rle_encoded
+
+
+def save_rle_encode(rle_encoded):
+    data = b"".join(rle_encoded)
+
+    try:
+        with open('rle_encoded.rle', 'wb') as f:
+            f.write(data)
+    except IOError as e:
+        print(f"Error writing file: {e}")
+
 def main():
     convert_to_rgb()
 
@@ -128,8 +172,11 @@ def main():
 
     frames = prepare_yuv_frames(frames)
 
-    yuv_encode(frames)
+    save_yuv_encode(frames)
 
+    rle_encoded = run_length_encoding(frames)
+
+    save_rle_encode(rle_encoded)
 
 if __name__ == '__main__':
     main()
