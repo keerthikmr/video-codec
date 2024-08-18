@@ -5,6 +5,7 @@ import time
 
 input_video_path = 'input.mp4'
 
+# Fetch height and width of the video
 height, width = cv2.VideoCapture(input_video_path).read()[1].shape[:2]
 
 # Prevent overflow and underflow (bytes)
@@ -51,7 +52,6 @@ def get_yuv_cv():
 
 # Convert the video to RGB format using ffmpeg
 def convert_to_rgb():
-    # ffmpeg.input(video_path, format='rawvideo', pix_fmt='rgb24', s='216x384').output('output.rgb').run()
     ffmpeg.input(input_video_path).output('video.rgb24', format='rawvideo', pix_fmt='rgb24').run()
 
 
@@ -59,6 +59,7 @@ def convert_to_rgb():
 def get_byte_frames():
     frames = []
 
+    # RGB24 format has 3 bytes (R, G, B) per pixel
     buffer_size = width*height*3
 
     with open('video.rgb24', 'rb') as file:
@@ -79,11 +80,13 @@ def get_yuv(frame):
     for j in range(width*height):
         r, g, b = frame[3*j], frame[3*j+1], frame[3*j+2]
         
+        # Formulae to convert RGB to YUV
         y = +0.299*r + 0.587*g + 0.114*b
         u = -0.169*r - 0.331*g + 0.449*b + 128
         v = 0.499*r - 0.418*g - 0.0813*b + 128
 
         Y.append(int(y))
+        # U and V will be converted to intergers later
         U.append(u)
         V.append(v)
 
@@ -93,18 +96,18 @@ def get_yuv(frame):
 # Average the U and V values of 2x2 pixels to downsample
 def down_sample(U, V):
 
-    down_sampled_V = [0] * (width // 2 * height // 2)
-    down_sampled_U = [0] * (width // 2 * height // 2)
+    down_sampled_V = []
+    down_sampled_U = []
 
     for x in range(0, height, 2):
         for y in range (0, width, 2): 
             u = (U[x*width+y] + U[x*width+y+1] + U[(x+1)*width+y] + U[(x+1)*width+y+1]) / 4
             v = (V[x*width+y] + V[x*width+y+1] + V[(x+1)*width+y] + V[(x+1)*width+y+1]) / 4
 
-            downsampled_index = (x // 2) * (width // 2) + (y // 2)
+            # downsampled_index = (x // 2) * (width // 2) + (y // 2)
 
-            down_sampled_U[downsampled_index] = int(u)
-            down_sampled_V[downsampled_index] = int(v)
+            down_sampled_U.append(int(u))
+            down_sampled_V.append(int(v))
 
 
     return down_sampled_U, down_sampled_V
