@@ -3,7 +3,7 @@ import ffmpeg
 import zlib
 import time
 
-input_video_path = 'input2.mp4'
+input_video_path = 'input.mp4'
 
 height, width = cv2.VideoCapture(input_video_path).read()[1].shape[:2]
 
