@@ -143,11 +143,11 @@ def run_length_encoding(frames):
     delta = []
     for i in range(len(frames)):
         delta_frame = []
-        if i == 0:
+        if i == 0: # First frame will be reference frame
             delta.append(bytearray(frames[0]))
             continue
         
-
+        # Store the difference between the current frame and the previous frame
         # Modulo 256 to handle overflow (wrap around for negative numbers)
         for j in range (len(frames[i])):
             delta_frame.append((frames[i][j] - frames[i-1][j]) % 256)
@@ -175,6 +175,7 @@ def run_length_encoding(frames):
     return delta
 
 
+# Only saves delta right now
 def save_rle_encode(byte_rle_encoded):
 
     try:
