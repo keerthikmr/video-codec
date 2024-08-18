@@ -186,6 +186,7 @@ def save_rle_encode(byte_rle_encoded):
         print(f"Error writing file: {e}")
 
 
+# Save the video after compressing them using zlib
 def save_zlib_compressed(byte_rle_encoded):
     try:
         with open('zlib_encoded.bin', 'wb') as f:
@@ -258,7 +259,7 @@ def revert_to_rgb(yuv_frames):
     decoded_frames = []
 
     for frame in yuv_frames:
-
+        # Y occupies 50% of the frame, U and V occupy 25% each
         Y = frame[:width*height]
         U = frame[width * height : width * height + (width * height // 4)]
         V = frame[width * height + width * height // 4:]
@@ -267,10 +268,7 @@ def revert_to_rgb(yuv_frames):
         for j in range (height):
             for k in range(width):
                 y = Y[j * width + k]
-                try:
-                    u = (U[(j // 2) * (width // 2) + (k // 2)]) - 128
-                except IndexError:
-                    print(int((j / 2) * (width / 2) + (k / 2)))
+                u = (U[(j // 2) * (width // 2) + (k // 2)]) - 128
                 v = (V[(j // 2) * (width // 2) + (k // 2)]) - 128
 
                 r = clamp(y + 1.402 * v, 0, 255)
