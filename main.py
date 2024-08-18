@@ -1,10 +1,22 @@
 import cv2
 import ffmpeg
 import zlib
+import time
 
-input_video_path = 'input.mp4'
+input_video_path = 'input2.mp4'
 
-height, width = 216, 384
+height, width = cv2.VideoCapture(input_video_path).read()[1].shape[:2]
+
+# Prevent overflow and underflow (bytes)
+def clamp(x, min, max):
+    if x < min:
+        return min
+    
+    if x > max:
+        return max
+    
+    return x
+
 
 # Stores YUV values of the entire video using opencv method - takes more time (~40s for sample video)
 # Not the default method
@@ -125,36 +137,39 @@ def save_yuv_encode(frames):
 def run_length_encoding(frames):
     rle_encoded = []
 
+    delta = []
     for i in range(len(frames)):
+        delta_frame = []
         if i == 0:
-            rle_encoded.append(frames[0])
+            delta.append(bytearray(frames[0]))
             continue
         
-        delta = []
 
         # Modulo 256 to handle overflow (wrap around for negative numbers)
         for j in range (len(frames[i])):
-            delta.append((frames[i][j] - frames[i-1][j]) % 256)
-
-        j = 0
-        run_length_encoding = []
+            delta_frame.append((frames[i][j] - frames[i-1][j]) % 256)
         
-        while j < len(frames[i]):
+        delta.append(bytearray(delta_frame))
 
-            count = 0
-            # Count the number of consecutive same values
-            # Count should be less than 255 to fit in a byte
-            while count < 255 and (j + count) < len(delta) and delta[j + count] == delta[j]:
-                count += 1
+        # j = 0
+        # run_length_encoding = []
+        
+        # while j < len(frames[i]):
 
-            run_length_encoding.append(count)
-            run_length_encoding.append(delta[j])
+        #     count = 0
+        #     # Count the number of consecutive same values
+        #     # Count should be less than 255 to fit in a byte
+        #     while count < 255 and (j + count) < len(delta) and delta[j + count] == delta[j]:
+        #         count += 1
 
-            j += count
+        #     run_length_encoding.append(count)
+        #     run_length_encoding.append(delta[j])
 
-        rle_encoded.append(bytearray(run_length_encoding))
+        #     j += count
 
-    return rle_encoded
+        # rle_encoded.append(bytearray(run_length_encoding))
+
+    return delta
 
 
 def save_rle_encode(byte_rle_encoded):
@@ -168,7 +183,6 @@ def save_rle_encode(byte_rle_encoded):
 
 
 def save_zlib_compressed(byte_rle_encoded):
-    
     try:
         with open('zlib_encoded.bin', 'wb') as f:
             f.write(zlib.compress(byte_rle_encoded, level=9))
@@ -206,12 +220,8 @@ def decompress():
 
     return decompressed
 
-    
-# Revert all encoding steps in reverse order
-def decode():
 
-    decompressed = decompress()
-    
+def get_decoded_frames(decompressed):
     frames = []
     
     # In the YUV downsampling step, each 2x2 pixel was substiuited with one value.
@@ -219,16 +229,94 @@ def decode():
     buffer_size = (width*height*3)//2
 
     i = 0
-
-    while buffer_size * (i + 1) < len(decompressed):
+    
+    while (buffer_size * (i + 1) <= len(decompressed)):
         frame = decompressed[buffer_size * i : buffer_size * (i + 1)]
 
-        frames.append(frame)
+        frames.append(bytearray(frame))
 
         i += 1
 
     return frames
 
+
+def reverse_delta(frames):
+
+    for i in range(1, len(frames)):
+        for j in range(len(frames[i])):
+            frames[i][j] = (frames[i][j] + frames[i-1][j]) % 256
+        
+    return frames
+
+
+def revert_to_rgb(yuv_frames):
+    
+    decoded_frames = []
+
+    for frame in yuv_frames:
+
+        Y = frame[:width*height]
+        U = frame[width * height : width * height + (width * height // 4)]
+        V = frame[width * height + width * height // 4:]
+
+        rgb = []
+        for j in range (height):
+            for k in range(width):
+                y = Y[j * width + k]
+                try:
+                    u = (U[(j // 2) * (width // 2) + (k // 2)]) - 128
+                except IndexError:
+                    print(int((j / 2) * (width / 2) + (k / 2)))
+                v = (V[(j // 2) * (width // 2) + (k // 2)]) - 128
+
+                r = clamp(y + 1.402 * v, 0, 255)
+                g = clamp(y - 0.344 * u - 0.714 * v, 0, 255)
+                b = clamp(y + 1.772 * u, 0, 255)
+
+                rgb.append(int(r))
+                rgb.append(int(g))
+                rgb.append(int(b))
+
+        decoded_frames.append(rgb)
+    
+    return decoded_frames
+
+
+def save_yuv_decoded(yuv_frames):
+    try:
+        with open('decoded.yuv', 'wb') as f:
+            for frame in yuv_frames:
+                f.write(bytearray(frame))
+
+    except IOError as e:
+        print(f"Error writing file: {e}")
+
+    
+def save_decoded(decoded_frames):
+    try:
+        with open('decoded.rgb24', 'wb') as f:
+            for frame in decoded_frames:
+                f.write(bytearray(frame))
+
+    except IOError as e:
+        print(f"Error writing file: {e}")
+    
+    
+# Revert all encoding steps in reverse order
+def decode():
+
+    decompressed = decompress()
+
+    frames = get_decoded_frames(decompressed)
+
+    yuv_frames = reverse_delta(frames)
+
+    save_yuv_decoded(yuv_frames)
+
+    decoded_frames = revert_to_rgb(yuv_frames)
+
+    save_decoded(decoded_frames)
+    
 
 def main():
     encode()
@@ -237,4 +325,7 @@ def main():
 
 
 if __name__ == '__main__':
+    start = time.time()
     main()
+    end = time.time()
+    print(f"Time taken: {end - start}")
