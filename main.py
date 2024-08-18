@@ -101,18 +101,16 @@ def down_sample(U, V):
 
     for x in range(0, height, 2):
         for y in range (0, width, 2): 
-            u = (U[x*width+y] + U[x*width+y+1] + U[(x+1)*width+y] + U[(x+1)*width+y+1]) / 4
-            v = (V[x*width+y] + V[x*width+y+1] + V[(x+1)*width+y] + V[(x+1)*width+y+1]) / 4
-
-            # downsampled_index = (x // 2) * (width // 2) + (y // 2)
+            u = (U[x * width + y] + U[x * width + y + 1] + U[(x + 1) * width + y] + U[(x + 1) * width + y + 1]) / 4
+            v = (V[x * width + y] + V[x * width + y + 1] + V[(x + 1) * width + y] + V[(x + 1) * width + y + 1]) / 4
 
             down_sampled_U.append(int(u))
             down_sampled_V.append(int(v))
 
-
     return down_sampled_U, down_sampled_V
 
 
+# Get downsampled U and V values and append them to the Y values in planar format (Y->U->V)
 def prepare_yuv_frames(frames):
 
     for i in range(len(frames)):
@@ -127,6 +125,7 @@ def prepare_yuv_frames(frames):
     return frames
 
 
+# Save the YUV downsampled video to a file
 def save_yuv_encode(frames):
     data = b"".join(frames)
 
@@ -137,8 +136,9 @@ def save_yuv_encode(frames):
         print(f"Error writing file: {e}")
 
 
+# Only delta is impleted right now
 def run_length_encoding(frames):
-    rle_encoded = []
+    # rle_encoded = []
 
     delta = []
     for i in range(len(frames)):
