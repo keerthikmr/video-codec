@@ -19,6 +19,7 @@ _Dimension has to be the same as the original source_
 <br/>
 
 ## Project notes
+*Time measurements relative to tested machine and video*
 
 #### With rgb24 format
 
@@ -33,9 +34,17 @@ Fetching the RGB values of each pixel in the 8 second 384x216 video takes **~35s
 
 Using the `yuv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)` method takes only **~40s**
 
-Reading bytes from rgb24 format and converting values to yuv using the numerical formula takes **~17s** in python  
+Reading bytes from rgb24 format and converting values to yuv using the numerical formula takes **~17s** in python (faster than opencv)
+
+Complete operation takes **~77s**
 
 
 #### Compression rates:
 
-Downsampling YUV values and encoding gives a compression ratio of **50%**
+Downsampling YUV values and encoding gives a compression ratio of **~50%**
+
+Run length encoding gives a compression ratio of **~25%**
+
+zlib gives a compression ratio of **~40%** on the uncompressed rgb file
+
+Using zlib compression and deltas gives a compression ratio of **~90%**
